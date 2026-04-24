@@ -32,11 +32,11 @@
 
 **GladiosWAF** is an **AI-powered, rule-free Web Application Firewall (WAF)** designed to protect modern applications from malicious traffic without relying on static signatures, regex rules, or manual tuning.
 
-Traditional WAFs depend on predefined patterns that attackers can easily bypass. KratosWAF uses **machine learning inference** to evaluate requests based on structural and statistical behavior—allowing it to detect both known and unknown attacks.
+Traditional WAFs depend on predefined patterns that attackers can easily bypass. GladiosWAF uses **machine learning inference** to evaluate requests based on structural and statistical behavior—allowing it to detect both known and unknown attacks.
 
 ---
 
-## Why KratosWAF
+## Why GladiosWAF
 
 ### Limitations of Traditional WAFs
 
