@@ -31,7 +31,7 @@ This guide uses **Node.js with Express middleware** as a worked example because 
 
 GladiosWAF acts as a pre-processing layer in your Express request pipeline. Every incoming `POST` and `PUT` request is forwarded to the GladiosWAF ML endpoint for classification before reaching your application logic. The ML endpoint signals its verdict via HTTP status code:
 
-- **`200 OK`** — request is safe; allow it through
+- **`200 OK`** — request is non-malicious; allow it through
 - **`403 Forbidden`** — request is malicious; block it
 
 **Request flow:**
