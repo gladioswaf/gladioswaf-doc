@@ -2,7 +2,11 @@
 
 > AI-powered Web Application Firewall — Express middleware integration
 
-GladiosWAF inspects incoming HTTP requests using a machine-learning classifier and blocks those flagged as malicious. This guide walks through integrating GladiosWAF into a Node.js application as Express middleware.
+GladiosWAF inspects incoming HTTP requests using a machine-learning classifier and blocks those flagged as malicious.
+
+GladiosWAF is **application-agnostic**: it exposes a standard HTTPS API, so it can be integrated with any backend stack — Node.js, Python, Go, Java, .NET, Ruby, PHP, or any platform capable of making outbound HTTP requests. It can also be invoked from API gateways, reverse proxies, serverless functions, or service meshes.
+
+This guide uses **Node.js with Express middleware** as a worked example because it's a common starting point, but the same patterns translate directly to other stacks. The core integration is always the same: forward the incoming request to the GladiosWAF endpoint, inspect the response status (`200` = safe, `403` = malicious), and decide whether to allow or block. See the [FAQ](#faq) for notes on adapting this guide to other frameworks.
 
 ---
 
@@ -842,6 +846,19 @@ If a frontend calls a backend that uses GladiosWAF, custom headers like `gladios
 
 **Does GladiosWAF inspect `GET` requests?**
 Not by default — query parameters are usually safer than bodies, and inspecting every `GET` doubles your traffic. You can opt in by passing `{ methods: ['GET', 'POST', 'PUT'] }`.
+
+**Can I use GladiosWAF with frameworks other than Express?**
+Yes — GladiosWAF is a plain HTTPS API and is independent of any framework or language. The Express middleware pattern in this guide translates directly to:
+
+- **Node.js**: Fastify hooks (`fastify.addHook('preHandler', ...)`), Koa middleware, NestJS guards or interceptors, Hapi extensions
+- **Python**: Flask `before_request` hooks, Django middleware, FastAPI dependencies or middleware
+- **Go**: `http.Handler` wrappers, Gin/Echo/Fiber middleware
+- **Java/Kotlin**: Spring `OncePerRequestFilter`, servlet filters
+- **.NET**: ASP.NET Core middleware (`app.Use(...)`)
+- **Ruby**: Rack middleware, Rails `before_action` filters
+- **PHP**: Laravel middleware, Symfony event listeners
+
+You can also integrate GladiosWAF outside your application code — at an API gateway (Kong, Apigee, AWS API Gateway via Lambda authorizer), a reverse proxy (Nginx with `ngx_http_auth_request_module`, Envoy with an external auth filter), or a service mesh. The contract is always the same: forward the request, check the status code (`200` safe, `403` malicious), proceed or block.
 
 **What's the latency overhead?**
 Typically _[TODO: confirm with benchmark, e.g., 50–150ms p95]_ depending on payload size and region.
