@@ -69,6 +69,49 @@ Treat your API key like a password:
 - Rotate keys periodically and immediately if you suspect a leak.
 - Use separate keys for development, staging, and production environments so you can revoke one without affecting the others.
 
+### Authenticating Requests
+
+Every request to the GladiosWAF ML endpoint must include your API key in the **`gladioswaf-apikey`** request header.
+
+```http
+POST /api/mlendpoint HTTP/1.1
+Host: www.somedomain.com
+Content-Type: application/json
+gladioswaf-apikey: your-api-key-here
+```
+
+**Important details:**
+
+- The header name is exactly `gladioswaf-apikey` — all lowercase, with a hyphen between `gladioswaf` and `apikey`. HTTP header names are case-insensitive, but stick with lowercase for consistency across tools and logs.
+- Do **not** use common alternatives like `Authorization`, `X-API-Key`, `apikey`, or `api-key` — these will not be recognized and will result in a `401 Unauthorized` response.
+- The key is sent as the **raw value** of the header. Do not prefix it with `Bearer`, `Token`, or any other scheme.
+
+**Examples in different tools:**
+
+```javascript
+// axios
+axios.post(ML_API_URL, body, {
+  headers: { 'gladioswaf-apikey': process.env.GLADIOSWAF_API_KEY }
+});
+```
+
+```javascript
+// fetch
+fetch(ML_API_URL, {
+  method: 'POST',
+  headers: { 'gladioswaf-apikey': process.env.GLADIOSWAF_API_KEY },
+  body: JSON.stringify(body)
+});
+```
+
+```bash
+# curl
+curl -X POST https://www.somedomain.com/api/mlendpoint \
+  -H "gladioswaf-apikey: your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{"key":"value"}'
+```
+
 ---
 
 ## Quick Start
@@ -78,7 +121,7 @@ Treat your API key like a password:
 Create or update your `.env` file:
 
 ```bash
-GLADIOSWAF_API_URL=https://ml.gladioswaf.ai/ml-endpoint
+GLADIOSWAF_API_URL=https://www.somedomain.com/api/mlendpoint
 GLADIOSWAF_API_KEY=your-api-key-here
 ```
 
@@ -147,9 +190,9 @@ That's it — your `POST` and `PUT` routes are now protected.
 | `GLADIOSWAF_TIMEOUT_MS` | Request timeout to the ML endpoint | `5000` |
 | `GLADIOSWAF_FAIL_MODE` | `open` (allow on error) or `closed` (block on error) | `open` |
 
-### Header name
+### Authentication header
 
-The API key must be sent in the `gladioswaf-apikey` header. HTTP header names are case-insensitive, but stick with lowercase for consistency.
+The API key must be sent in the `gladioswaf-apikey` header (all lowercase, hyphenated). See [Authenticating Requests](#authenticating-requests) for full details.
 
 ### Middleware options
 
