@@ -58,7 +58,7 @@ npm install axios
 
 To create an API key:
 
-1. **Log in** to your GladiosWAF account at _[TODO: portal URL]_.
+1. **Log in** to your GladiosWAF account.
 2. Navigate to the **API Key** section from the dashboard.
 3. Click **Create API Key**.
 4. Copy the generated key and store it securely — for security reasons, the full key is typically only shown once at creation time.
