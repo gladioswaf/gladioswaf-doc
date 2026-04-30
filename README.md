@@ -1,4 +1,4 @@
-# 🛡️ GladiosWAF Documentation
+# 🛡️ GladiosWAF Integration Guide
 
 > **AI-Powered · Rule-Free · Zero-Trust Web Application Firewall**
 
