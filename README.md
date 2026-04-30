@@ -47,12 +47,27 @@ Client → Express App → GladiosWAF Middleware → ML Endpoint
 
 - Node.js 18+ (for native `fetch` and modern async support)
 - An Express application (v4 or v5)
-- A GladiosWAF API key — _[TODO: describe how customers obtain a key, e.g., signup portal URL or contact email]_
+- A GladiosWAF API key (see [Obtaining an API Key](#obtaining-an-api-key) below)
 - `axios` installed:
 
 ```bash
 npm install axios
 ```
+
+### Obtaining an API Key
+
+To create an API key:
+
+1. **Log in** to your GladiosWAF account at _[TODO: portal URL]_.
+2. Navigate to the **API Key** section from the dashboard.
+3. Click **Create API Key**.
+4. Copy the generated key and store it securely — for security reasons, the full key is typically only shown once at creation time.
+
+Treat your API key like a password:
+
+- Never commit it to source control. Use environment variables or a secret manager (AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager, etc.).
+- Rotate keys periodically and immediately if you suspect a leak.
+- Use separate keys for development, staging, and production environments so you can revoke one without affecting the others.
 
 ---
 
