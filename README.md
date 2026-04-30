@@ -78,7 +78,7 @@ Treat your API key like a password:
 Create or update your `.env` file:
 
 ```bash
-GLADIOSWAF_API_URL=https://www.somedomain.com/api/mlendpoint
+GLADIOSWAF_API_URL=https://ml.gladioswaf.ai/ml-endpoint
 GLADIOSWAF_API_KEY=your-api-key-here
 ```
 
