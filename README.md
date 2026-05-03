@@ -742,7 +742,7 @@ GladiosWAF signals its verdict via the HTTP status code:
 |---|---|
 | `200 OK` | Request is non-malicious — proceed |
 | `403 Forbidden` | Request is malicious — block |
-| `401 Unauthorized` | Invalid or missing API key |
+| `401 Unauthorized` | API key required |
 | `5xx` | GladiosWAF service error — apply fail strategy |
 
 ### Important: configure your HTTP client to accept 403
