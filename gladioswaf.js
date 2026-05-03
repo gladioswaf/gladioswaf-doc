@@ -14,7 +14,6 @@ export default function gladiosWaf(options = {}) {
     apiKey,
     headerName = "gladioswaf-apikey",
     methods = ["POST", "PUT", "PATCH"],
-    removeDefaultHeaders = true,
     removeHeaders = [],
     timeout = 5000,
     failStrategy = "open",
@@ -28,6 +27,12 @@ export default function gladiosWaf(options = {}) {
 
   const methodsSet = new Set(methods.map((m) => m.toUpperCase()));
 
+  // Build once (performance + correctness)
+  const headersToRemove = new Set([
+    ...DEFAULT_REMOVED_HEADERS,
+    ...removeHeaders.map((h) => h.toLowerCase()),
+  ]);
+
   return async function gladiosWafMiddleware(req, res, next) {
     if (!methodsSet.has(req.method.toUpperCase())) {
       return next();
@@ -35,14 +40,16 @@ export default function gladiosWaf(options = {}) {
 
     const headersToForward = { ...req.headers };
 
-    for (const header of DEFAULT_REMOVED_HEADERS) {
+    // Remove headers (default + custom)
+    for (const header of headersToRemove) {
       delete headersToForward[header];
     }
 
+    // Inject API key
     headersToForward[headerName] = apiKey;
 
+    // Build URL with query params
     const targetUrl = new URL(apiUrl);
-
     for (const [key, value] of Object.entries(req.query ?? {})) {
       if (Array.isArray(value)) {
         value.forEach((v) => targetUrl.searchParams.append(key, String(v)));
@@ -61,6 +68,7 @@ export default function gladiosWaf(options = {}) {
         signal: controller.signal,
       };
 
+      // Attach body safely
       if (req.body !== undefined && req.body !== null) {
         if (typeof req.body === "string" || Buffer.isBuffer(req.body)) {
           fetchOptions.body = req.body;
@@ -72,6 +80,7 @@ export default function gladiosWaf(options = {}) {
 
       const wafResponse = await fetch(targetUrl.toString(), fetchOptions);
 
+      // Block decision
       if (wafResponse.status === 403) {
         return res.status(blockStatusCode).json(blockResponse);
       }
@@ -80,6 +89,7 @@ export default function gladiosWaf(options = {}) {
         return next();
       }
 
+      // Unexpected response
       throw new Error(`Unexpected GladiosWAF status: ${wafResponse.status}`);
     } catch (err) {
       if (typeof onError === "function") {
@@ -88,6 +98,7 @@ export default function gladiosWaf(options = {}) {
         console.error("GladiosWAF error:", err.message);
       }
 
+      // Fail strategy
       if (failStrategy === "closed") {
         return res.status(503).json({
           error: "GladiosWAF unavailable",
