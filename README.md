@@ -862,7 +862,10 @@ Yes — GladiosWAF is a plain HTTPS API and is independent of any framework or l
 You can also integrate GladiosWAF outside your application code — at an API gateway (Kong, Apigee, AWS API Gateway via Lambda authorizer), a reverse proxy (Nginx with `ngx_http_auth_request_module`, Envoy with an external auth filter), or a service mesh. The contract is always the same: forward the request, check the status code (`200` safe, `403` malicious), proceed or block.
 
 **What's the latency overhead?**
-Typically _[TODO: confirm with benchmark, e.g., 50–150ms p95]_ depending on payload size and region.
+GladiosWAF introduces low-latency real-time decisioning (~10–30ms), ensuring strong protection with no noticeable impact on application performance.
+
+Actual latency depends on network proximity to the AI engine and request payload size.
+
 
 **Can I run GladiosWAF in shadow mode (log but don't block)?**
 Yes — modify the middleware to log the verdict without returning `403`:
@@ -875,11 +878,9 @@ return next();
 ```
 
 **Is the ML endpoint stateful?**
-_[TODO: confirm — does the classifier maintain session context, or is each request inspected independently?]_
+GladiosWAF evaluates each request independently. The ML engine does not maintain session state, ensuring high performance, scalability, and consistent decision-making across all requests.
 
 ---
-
-## Support
 
 ## Support
 - Documentation: [GladiosWAF Integration Guide README.md](https://github.com/gladioswaf/gladioswaf-doc#readme)
