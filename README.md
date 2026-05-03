@@ -1,6 +1,6 @@
 # GladiosWAF Integration Guide
 
-> AI-powered Web Application Firewall — Express middleware integration
+> Autonomous Web Application Firewall (AI-powered) — Drop-in protection for modern apps
 
 GladiosWAF inspects incoming HTTP requests using a machine-learning classifier and blocks those flagged as malicious.
 
