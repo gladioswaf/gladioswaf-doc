@@ -321,7 +321,7 @@ function gladiosWAF(options = {}) {
         console.warn('[GladiosWAF] Blocked request', {
           path: req.path,
           ip: req.ip,
-          body: mlResponse.data // [TODO: confirm what (if anything) the 403 response body contains]
+          body: mlResponse.data // body: { result: "malicious" } // Blocked by GladiosWAF
         });
         return res.status(403).json({ error: 'Blocked By AI-WAF' });
       }
