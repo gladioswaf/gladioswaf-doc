@@ -881,6 +881,6 @@ _[TODO: confirm — does the classifier maintain session context, or is each req
 
 ## Support
 
-- Documentation: _[TODO: docs URL]_
-- Support email: _[TODO: support@...]_
+- Documentation: https://github.com/gladioswaf/gladioswaf-doc/edit/main/README.md
+- Support email: support@gladios.com.sg
 - Status page: _[TODO: status page URL]_
