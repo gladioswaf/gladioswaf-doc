@@ -79,7 +79,7 @@ Every request to the GladiosWAF ML endpoint must include your API key in the **`
 
 ```http
 POST /ml-endpoint HTTP/1.1
-Host: www.somedomain.com
+Host: ml.galdioswaf.ai
 Content-Type: application/json
 gladioswaf-apikey: your-api-key-here
 ```
