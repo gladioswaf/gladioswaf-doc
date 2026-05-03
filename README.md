@@ -110,7 +110,7 @@ fetch(ML_API_URL, {
 
 ```bash
 # curl
-curl -X POST https://www.somedomain.com/api/mlendpoint \
+curl -X POST https://ml.gladioswaf.ai/ml-endpoint \
   -H "gladioswaf-apikey: your-api-key-here" \
   -H "Content-Type: application/json" \
   -d '{"key":"value"}'
@@ -515,8 +515,6 @@ app.post('/api/payments', wafStrict, paymentHandler);
 app.post('/api/comments', createCommentHandler);
 ```
 
-> **Note:** when you mount `gladiosWAF()` at `/api` *and* pass `wafStrict` to a specific route, **both run** — the request gets inspected twice. To avoid this, either mount the default WAF on a different path that excludes the strict routes, or skip the app-level mount and apply WAF at the route level only.
-
 ### Skipping the WAF on specific routes
 
 If you've mounted GladiosWAF globally but need to exempt certain routes (health checks, webhooks from trusted sources, internal service calls), use a guard:
@@ -736,23 +734,16 @@ POST {GLADIOSWAF_API_URL}
 
 The middleware also forwards original request headers (excluding `host`, `connection`, `content-length`) so the classifier can inspect user-agent, cookies, etc.
 
-### Request body
-
-The forwarded request's original body. _[TODO: confirm — does the ML endpoint expect the raw body, or a wrapped envelope like `{ "method": "...", "path": "...", "body": {...} }`?]_
-
 ### Response
 
 GladiosWAF signals its verdict via the HTTP status code:
 
 | Status | Meaning |
 |---|---|
-| `200 OK` | Request is safe — proceed |
+| `200 OK` | Request is non-malicious — proceed |
 | `403 Forbidden` | Request is malicious — block |
 | `401 Unauthorized` | Invalid or missing API key |
-| `429 Too Many Requests` | Rate limit exceeded _[TODO: confirm limit, e.g., 1000 req/min]_ |
 | `5xx` | GladiosWAF service error — apply fail strategy |
-
-_[TODO: confirm whether the 200 and 403 responses include a body (e.g., confidence score, reason, request ID for support), or if they are empty.]_
 
 ### Important: configure your HTTP client to accept 403
 
@@ -836,7 +827,7 @@ Check network connectivity to `GLADIOSWAF_API_URL`. Lower the timeout if the end
 You forgot to mount `express.json()` (or `express.urlencoded()`) before the GladiosWAF middleware.
 
 **Legitimate requests being blocked**
-Capture the request and submit it to _[TODO: support / feedback channel]_ for review and model retraining.
+Capture the request and submit it to support@gladios.com.sg for review and model retraining.
 
 **Custom headers stripped by browser (CORS)**
 If a frontend calls a backend that uses GladiosWAF, custom headers like `gladioswaf-apikey` should only be added server-side, not from the browser. Browsers will block them unless the destination server allows them in `Access-Control-Allow-Headers`.
