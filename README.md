@@ -190,7 +190,7 @@ That's it — your `POST` and `PUT` routes are now protected.
 
 | Variable | Description | Default |
 |---|---|---|
-| `GLADIOSWAF_API_URL` | The ML endpoint URL | _[TODO: production URL]_ |
+| `GLADIOSWAF_API_URL` | The ML endpoint URL | https://ml.gladioswaf.ai/ml-endpoint |
 | `GLADIOSWAF_API_KEY` | Your customer API key | _(required)_ |
 | `GLADIOSWAF_TIMEOUT_MS` | Request timeout to the ML endpoint | `5000` |
 | `GLADIOSWAF_FAIL_MODE` | `open` (allow on error) or `closed` (block on error) | `open` |
