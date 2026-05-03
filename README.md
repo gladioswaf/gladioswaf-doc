@@ -125,11 +125,11 @@ curl -X POST https://www.somedomain.com/api/mlendpoint \
 Create or update your `.env` file:
 
 ```bash
-GLADIOSWAF_API_URL=https://www.somedomain.com/api/mlendpoint
+GLADIOSWAF_API_URL=https://ml.gladioswaf.ai
 GLADIOSWAF_API_KEY=your-api-key-here
 ```
 
-### 2. Add the middleware
+### 2. Add the middleware - you can use fetch or axios
 
 ```javascript
 const express = require('express');
@@ -146,6 +146,7 @@ app.use(async (req, res, next) => {
     return next();
   }
 
+  // Optionally removing the sensitive
   const headersToForward = { ...req.headers };
   delete headersToForward.host;
   delete headersToForward.connection;
