@@ -78,7 +78,7 @@ Treat your API key like a password:
 Every request to the GladiosWAF ML endpoint must include your API key in the **`gladioswaf-apikey`** request header.
 
 ```http
-POST /api/mlendpoint HTTP/1.1
+POST /ml-endpoint HTTP/1.1
 Host: www.somedomain.com
 Content-Type: application/json
 gladioswaf-apikey: your-api-key-here
