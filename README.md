@@ -2,7 +2,7 @@
 
 > Autonomous Web Application Firewall (AI-powered) — Drop-in protection for modern apps
 
-GladiosWAF inspects incoming HTTP requests using a machine-learning classifier and blocks those flagged as malicious.
+GladiosWAF inspects incoming HTTP requests using a machine-learning model and blocks those flagged as malicious.
 
 GladiosWAF is **application-agnostic**: it exposes a standard HTTPS API, so it can be integrated with any backend stack — Node.js, Python, Go, Java, .NET, Ruby, PHP, or any platform capable of making outbound HTTP requests. It can also be invoked from API gateways, reverse proxies, serverless functions, or service meshes.
 
