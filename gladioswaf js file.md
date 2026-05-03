@@ -1,4 +1,4 @@
-## This is the middleware code
+# This is the middleware js code e.g. gladioswaf.js 
 
 ```
 const DEFAULT_REMOVED_HEADERS = [
