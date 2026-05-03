@@ -800,7 +800,7 @@ app.use('/api/admin', gladiosWAF({ failMode: 'closed' }));
 
 **Log blocked requests** with enough context (path, IP, reason) for incident review, but avoid logging full request bodies if they may contain sensitive user data.
 
-**Monitor false-positive rates.** If legitimate traffic gets blocked, capture the request signature and report it via _[TODO: support contact / feedback mechanism]_.
+**Monitor false-positive rates.** If legitimate traffic gets blocked, capture the request signature and report it via support@gladios.com.sg.
 
 **Skip GladiosWAF for trusted internal traffic** (health checks, internal service-to-service calls) using a path or header check:
 
