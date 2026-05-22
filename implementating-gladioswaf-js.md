@@ -7,7 +7,7 @@ app.use(express.json());
 
 app.use(
   gladiosWaf({
-    apiUrl: "https://api.gladioswaf.ai/ml-endpoint",
+    apiUrl: "https://ml.gladioswaf.ai/ml-endpoint",
     apiKey: process.env.GLADIOSWAF_API_KEY,
 
     // Optional customization
