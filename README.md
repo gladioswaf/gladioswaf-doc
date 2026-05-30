@@ -55,7 +55,7 @@ Client → Express App → GladiosWAF Middleware → ML Endpoint
 - `axios` installed:
 
 ```bash
-npm install axios
+npm install axios or fetch
 ```
 
 ### Obtaining an API Key
@@ -75,11 +75,12 @@ Treat your API key like a password:
 
 ### Authenticating Requests
 
+
 Every request to the GladiosWAF ML endpoint must include your API key in the **`gladioswaf-apikey`** request header.
 
 ```http
 POST /ml-endpoint HTTP/1.1
-Host: ml.galdioswaf.ai
+Host: https://ml.galdioswaf.ai/ml-endpoint
 Content-Type: application/json
 gladioswaf-apikey: your-api-key-here
 ```
@@ -125,7 +126,7 @@ curl -X POST https://ml.gladioswaf.ai/ml-endpoint \
 Create or update your `.env` file:
 
 ```bash
-GLADIOSWAF_API_URL=https://ml.gladioswaf.ai
+GLADIOSWAF_API_URL=https://ml.gladioswaf.ai/ml-endpoint
 GLADIOSWAF_API_KEY=your-api-key-here
 ```
 
