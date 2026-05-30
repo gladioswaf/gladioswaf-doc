@@ -837,7 +837,7 @@ If a frontend calls a backend that uses GladiosWAF, custom headers like `gladios
 ## FAQ
 
 **Does GladiosWAF inspect `GET` requests?**
-Not by default — query parameters are usually safer than bodies, and inspecting every `GET` doubles your traffic. You can opt in by passing `{ methods: ['GET', 'POST', 'PUT'] }`.
+Not by default — query parameters are usually safer than bodies, and inspecting every `GET` doubles your traffic. You can opt in by passing `{ methods: ['GET', 'POST', 'PUT','DELETE','PATCH'] }`.
 
 **Can I use GladiosWAF with frameworks other than Express?**
 Yes — GladiosWAF is a plain HTTPS API and is independent of any framework or language. The Express middleware pattern in this guide translates directly to:
