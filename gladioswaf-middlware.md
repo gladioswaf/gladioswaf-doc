@@ -17,6 +17,7 @@ export default function gladiosWaf(options = {}) {
     apiKey,
     headerName = "gladioswaf-apikey",
     methods = ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    removeDefaultHeaders = true,
     removeHeaders = [],
     timeout = 5000,
     failStrategy = "open",
@@ -28,72 +29,62 @@ export default function gladiosWaf(options = {}) {
   if (!apiUrl) throw new Error("GladiosWAF: apiUrl is required.");
   if (!apiKey) throw new Error("GladiosWAF: apiKey is required.");
 
-  const methodsSet = new Set(methods.map((m) => m.toUpperCase()));
+  const allowedMethods = new Set(methods.map((m) => m.toUpperCase()));
 
-  // Build once (performance + correctness)
   const headersToRemove = new Set([
-    ...DEFAULT_REMOVED_HEADERS,
+    ...(removeDefaultHeaders ? DEFAULT_REMOVED_HEADERS : []),
     ...removeHeaders.map((h) => h.toLowerCase()),
   ]);
 
   return async function gladiosWafMiddleware(req, res, next) {
-    if (!methodsSet.has(req.method.toUpperCase())) {
+    if (!allowedMethods.has(req.method.toUpperCase())) {
       return next();
-    }
-
-    const headersToForward = { ...req.headers };
-
-    // Remove headers (default + custom)
-    for (const header of headersToRemove) {
-      delete headersToForward[header];
-    }
-
-    // Inject API key
-    headersToForward[headerName] = apiKey;
-
-    // Build URL with query params
-    const targetUrl = new URL(apiUrl);
-    for (const [key, value] of Object.entries(req.query ?? {})) {
-      if (Array.isArray(value)) {
-        value.forEach((v) => targetUrl.searchParams.append(key, String(v)));
-      } else {
-        targetUrl.searchParams.append(key, String(value));
-      }
     }
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const fetchOptions = {
-        method: req.method,
-        headers: headersToForward,
-        signal: controller.signal,
-      };
+      const headers = { ...req.headers };
 
-      // Attach body safely
-      if (req.body !== undefined && req.body !== null) {
-        if (typeof req.body === "string" || Buffer.isBuffer(req.body)) {
-          fetchOptions.body = req.body;
-        } else {
-          fetchOptions.body = JSON.stringify(req.body);
-          headersToForward["content-type"] = "application/json";
-        }
+      for (const header of headersToRemove) {
+        delete headers[header];
       }
 
-      const wafResponse = await fetch(targetUrl.toString(), fetchOptions);
+      headers[headerName] = apiKey;
+      headers["content-type"] = "application/json";
 
-      // Block decision
-      if (wafResponse.status === 403) {
+      const payload = {
+        method: req.method,
+        url: req.originalUrl || req.url,
+        headers,
+        body: req.body || {},
+      };
+
+      const wafResponse = await fetch(apiUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      if (!wafResponse.ok) {
+        throw new Error(`GladiosWAF returned ${wafResponse.status}`);
+      }
+
+      const decision = await wafResponse.json();
+
+      req.gladioswaf = decision;
+
+      const isMalicious =
+        decision?.result?.toLowerCase() === "malicious" ||
+        decision?.block === true;
+
+      if (isMalicious) {
         return res.status(blockStatusCode).json(blockResponse);
       }
 
-      if (wafResponse.ok) {
-        return next();
-      }
-
-      // Unexpected response
-      throw new Error(`Unexpected GladiosWAF status: ${wafResponse.status}`);
+      return next();
     } catch (err) {
       if (typeof onError === "function") {
         onError(err, req);
@@ -101,7 +92,6 @@ export default function gladiosWaf(options = {}) {
         console.error("GladiosWAF error:", err.message);
       }
 
-      // Fail strategy
       if (failStrategy === "closed") {
         return res.status(503).json({
           error: "GladiosWAF unavailable",
