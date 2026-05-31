@@ -16,7 +16,7 @@ export default function gladiosWaf(options = {}) {
     apiUrl,
     apiKey,
     headerName = "gladioswaf-apikey",
-    methods = ["GET", "POST", "PUT", "PATCH"],
+    methods = ["GET", "POST", "PUT", "DELETE", "PATCH"],
     removeHeaders = [],
     timeout = 5000,
     failStrategy = "open",
