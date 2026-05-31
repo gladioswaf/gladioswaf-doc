@@ -161,9 +161,7 @@ app.use(async (req, res, next) => {
       params: req.query,
       headers: headersToForward,
       data: req.body,
-      timeout: 5000,
-      // Treat 200 and 403 as expected responses; anything else is an error
-      validateStatus: (status) => status === 200 || status === 403
+      timeout: 5000
     });
 
     if (mlResponse.status === 403) {
