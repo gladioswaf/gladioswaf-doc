@@ -220,128 +220,109 @@ Below is a production-ready version with timeout, configurable fail mode, header
 
 ```javascript
 // gladioswaf.js
-const axios = require('axios');
+const DEFAULT_REMOVED_HEADERS = [
+  "host",
+  "connection",
+  "content-length",
+  "transfer-encoding",
+  "upgrade",
+  "proxy-authorization",
+  "proxy-authenticate",
+];
 
-const ML_API_URL = process.env.GLADIOSWAF_API_URL;
-const API_KEY = process.env.GLADIOSWAF_API_KEY;
-const TIMEOUT_MS = parseInt(process.env.GLADIOSWAF_TIMEOUT_MS, 10) || 5000;
-const FAIL_MODE = process.env.GLADIOSWAF_FAIL_MODE || 'open';
-
-// Headers that should never be forwarded — they describe the hop, not the request
-const HOP_HEADERS = ['host', 'connection', 'content-length', 'api-keys'];
-
-function buildForwardHeaders(reqHeaders, stripHeaders = []) {
-  const headers = { ...reqHeaders };
-  const toStrip = [...HOP_HEADERS, ...stripHeaders.map((h) => h.toLowerCase())];
-  for (const h of toStrip) {
-    delete headers[h];
-  }
-  headers['gladioswaf-apikey'] = API_KEY;
-  return headers;
-}
-
-function stripCookies(cookieHeader, stripCookies = []) {
-  if (!cookieHeader || stripCookies.length === 0) return cookieHeader;
-  const stripSet = new Set(stripCookies);
-  return cookieHeader
-    .split(';')
-    .map((c) => c.trim())
-    .filter((c) => {
-      const name = c.split('=')[0];
-      return !stripSet.has(name);
-    })
-    .join('; ');
-}
-
-function stripBodyFields(body, stripFields = []) {
-  if (!body || typeof body !== 'object' || stripFields.length === 0) return body;
-  const clone = JSON.parse(JSON.stringify(body)); // deep clone
-  for (const path of stripFields) {
-    deletePath(clone, path);
-  }
-  return clone;
-}
-
-// Deletes a dot-notation path from an object, e.g. 'user.password' or 'creditCard.cvv'
-function deletePath(obj, path) {
-  const parts = path.split('.');
-  let current = obj;
-  for (let i = 0; i < parts.length - 1; i++) {
-    if (current == null || typeof current !== 'object') return;
-    current = current[parts[i]];
-  }
-  if (current && typeof current === 'object') {
-    delete current[parts[parts.length - 1]];
-  }
-}
-
-function gladiosWAF(options = {}) {
+export default function gladiosWaf(options = {}) {
   const {
-    methods = ['POST', 'PUT'],
-    stripHeaders = [],
-    stripCookies: stripCookieList = [],
-    stripBodyFields: stripBodyList = [],
-    transformBody // optional async (body, req) => sanitizedBody
+    apiUrl,
+    apiKey,
+    headerName = "gladioswaf-apikey",
+    methods = ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    removeDefaultHeaders = true,
+    removeHeaders = [],
+    timeout = 5000,
+    failStrategy = "open",
+    blockStatusCode = 403,
+    blockResponse = { error: "Blocked by GladiosWAF" },
+    onError,
   } = options;
 
-  return async function (req, res, next) {
-    if (!methods.includes(req.method)) {
+  if (!apiUrl) throw new Error("GladiosWAF: apiUrl is required.");
+  if (!apiKey) throw new Error("GladiosWAF: apiKey is required.");
+
+  const allowedMethods = new Set(methods.map((m) => m.toUpperCase()));
+
+  const headersToRemove = new Set([
+    ...(removeDefaultHeaders ? DEFAULT_REMOVED_HEADERS : []),
+    ...removeHeaders.map((h) => h.toLowerCase()),
+  ]);
+
+  return async function gladiosWafMiddleware(req, res, next) {
+    if (!allowedMethods.has(req.method.toUpperCase())) {
       return next();
     }
 
-    // 1. Sanitize headers
-    const headersToForward = buildForwardHeaders(req.headers, stripHeaders);
-
-    // 2. Sanitize cookies
-    if (headersToForward.cookie) {
-      headersToForward.cookie = stripCookies(headersToForward.cookie, stripCookieList);
-      if (!headersToForward.cookie) delete headersToForward.cookie;
-    }
-
-    // 3. Sanitize body
-    let bodyToForward = stripBodyFields(req.body, stripBodyList);
-    if (typeof transformBody === 'function') {
-      bodyToForward = await transformBody(bodyToForward, req);
-    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const mlResponse = await axios({
-        method: req.method.toLowerCase(),
-        url: ML_API_URL,
-        params: req.query,
-        headers: headersToForward,
-        data: bodyToForward,
-        timeout: TIMEOUT_MS,
-        // 200 = safe, 403 = malicious. Both are expected; don't throw.
-        validateStatus: (status) => status === 200 || status === 403
+      const headers = { ...req.headers };
+
+      for (const header of headersToRemove) {
+        delete headers[header];
+      }
+
+      headers[headerName] = apiKey;
+      headers["content-type"] = "application/json";
+
+      const payload = {
+        method: req.method,
+        url: req.originalUrl || req.url,
+        headers,
+        body: req.body || {},
+      };
+
+      const wafResponse = await fetch(apiUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
-      if (mlResponse.status === 403) {
-        console.warn('[GladiosWAF] Blocked request', {
-          path: req.path,
-          ip: req.ip,
-          body: mlResponse.data // body: { result: "malicious" } // Blocked by GladiosWAF
-        });
-        return res.status(403).json({ error: 'Blocked By AI-WAF' });
+      if (!wafResponse.ok) {
+        throw new Error(`GladiosWAF returned ${wafResponse.status}`);
+      }
+
+      const decision = await wafResponse.json();
+
+      req.gladioswaf = decision;
+
+      const isMalicious =
+        decision?.result?.toLowerCase() === "malicious" ||
+        decision?.block === true;
+
+      if (isMalicious) {
+        return res.status(blockStatusCode).json(blockResponse);
       }
 
       return next();
     } catch (err) {
-      console.error('[GladiosWAF] Inspection failed', {
-        path: req.path,
-        error: err.message,
-        status: err.response?.status
-      });
-
-      if (FAIL_MODE === 'closed') {
-        return res.status(503).json({ error: 'WAF unavailable' });
+      if (typeof onError === "function") {
+        onError(err, req);
+      } else {
+        console.error("GladiosWAF error:", err.message);
       }
+
+      if (failStrategy === "closed") {
+        return res.status(503).json({
+          error: "GladiosWAF unavailable",
+        });
+      }
+
       return next();
+    } finally {
+      clearTimeout(timer);
     }
   };
 }
-
-module.exports = gladiosWAF;
 ```
 
 **Usage:**
